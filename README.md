@@ -55,6 +55,7 @@ remove one without touching the other.
 ```text
 src/                  contracts (frozen)
   ccip/               CrossChainERC4626Adapter, CrossChainERC4626AdapterFactory
+  ccip/dev/           ExampleERC4626Vault (unaudited example vault for testnet tutorials)
   multibridge/        MultiChannelBridgeAdapter, routing/RouteRegistry, stargate/IStargate,
                       examples/CrossChainVaultAdapter, CrossChainVaultAdapterFactory
 test/
@@ -192,6 +193,13 @@ Put new contracts under a `dev/` directory until they are reviewed, and give eac
   `pnpm ccip:check` to verify. Step by step in the
   [deployment guide](docs/ccip/cross-chain-erc4626-adapter-deployment-guide.md); operations in the
   [operator guide](docs/ccip/cross-chain-erc4626-adapter-operator-guide.md).
+- Example vault (testnets only):
+  `pnpm ccip:deploy-example-vault --rpc-url ccip --account <keystore> --broadcast --verify --delay 20 --retries 12`
+  deploys `ExampleERC4626Vault` from `src/ccip/dev/`. It is OpenZeppelin `ERC4626` and `Ownable` with only a
+  constructor, so shares convert 1:1 to the asset until the vault receives assets outside `deposit` and `mint`, and
+  `owner()` lets you register the share token's CCIP admin. Set `VAULT_ASSET`, `VAULT_NAME` and `VAULT_SYMBOL`
+  (optional `VAULT_OWNER`, default the broadcaster). The Chainlink documentation tutorials use it as the vault behind
+  the adapter. It is not audited: use your own vault in production.
 - Multibridge: `pnpm multibridge:deploy-factory --rpc-url <rpc> --account <keystore> --broadcast` publishes the
   implementation and factory, after which each vault issuer calls `factory.deploy(DeployConfig)`
   ([deployment](docs/multibridge/operator/DEPLOYMENT.md)). `pnpm multibridge:deploy` does a full multi-network
