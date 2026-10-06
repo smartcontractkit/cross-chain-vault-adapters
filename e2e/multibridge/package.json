@@ -1,0 +1,40 @@
+{
+  "name": "@chainlink/cross-chain-vault-adapters-e2e-multibridge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tenderly e2e originator: deposit/redeem messages to the cross-chain vault adapter, sent with the Chainlink CCIP SDK and the LayerZero OFT + options SDK.",
+  "scripts": {
+    "initiate": "tsx src/initiate.ts",
+    "initiate:redeem:arbitrum": "SCENARIO=redeem-arbitrum tsx src/initiate.ts",
+    "initiate:redeem:bsc": "SCENARIO=redeem-bsc tsx src/initiate.ts",
+    "initiate:stargate": "SCENARIO=stargate-arbitrum tsx src/initiate.ts",
+    "initiate:stargate:arbitrum": "SCENARIO=stargate-arbitrum tsx src/initiate.ts",
+    "initiate:stargate:bsc": "SCENARIO=stargate-bsc tsx src/initiate.ts",
+    "initiate:usdt0": "SCENARIO=usdt0 tsx src/initiate.ts",
+    "initiate:fail:deposit:arbitrum": "SCENARIO=fail-deposit-arbitrum tsx src/initiate.ts",
+    "initiate:fail:deposit:bsc": "SCENARIO=fail-deposit-bsc tsx src/initiate.ts",
+    "initiate:fail:redeem:arbitrum": "SCENARIO=fail-redeem-arbitrum tsx src/initiate.ts",
+    "initiate:fail:redeem:bsc": "SCENARIO=fail-redeem-bsc tsx src/initiate.ts",
+    "initiate:deposit:fuji:usdc": "SCENARIO=deposit-fuji-usdc tsx src/initiate.ts",
+    "initiate:redeem:fuji:usdc": "SCENARIO=redeem-fuji-usdc tsx src/initiate.ts",
+    "initiate:fail:deposit:fuji:usdc": "SCENARIO=fail-deposit-fuji-usdc ADAPTER_PROFILE=usdc tsx src/initiate.ts",
+    "initiate:fail:redeem:fuji:usdc": "SCENARIO=fail-redeem-fuji-usdc ADAPTER_PROFILE=usdc tsx src/initiate.ts",
+    "recover:status": "CHECK_ONLY=1 tsx src/recover.ts",
+    "recover:refund": "tsx src/recover.ts",
+    "inspect:adapter": "tsx src/inspect-adapter.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@chainlink/ccip-sdk": "1.9.0",
+    "@layerzerolabs/lz-v2-utilities": "3.0.168",
+    "dotenv": "16.6.1",
+    "viem": "2.52.2"
+  },
+  "devDependencies": {
+    "@types/node": "22.7.5",
+    "tsx": "4.22.4",
+    "typescript": "5.9.3"
+  },
+  "license": "MIT"
+}
