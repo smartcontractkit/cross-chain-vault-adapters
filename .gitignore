@@ -1,0 +1,35 @@
+# Compiler files
+cache/
+out/
+foundry-cache/
+foundry-artifacts/
+broadcast/
+!broadcast/**/dry-run/
+
+# Dotenv file
+.env
+.env.*
+!.env.example
+
+# Workspace
+.idea
+.DS_Store
+*.swp
+.claude/
+
+# Node toolchain
+node_modules/
+
+# Coverage
+lcov.info
+coverage/
+
+# Generated E2E artifacts
+e2e/ccip/reports/suite-*.md
+config/multibridge/tenderly.json
+deployments/multibridge/*.json
+deployments/ccip/*.json
+logs/
+
+# Frontend build output
+dist/

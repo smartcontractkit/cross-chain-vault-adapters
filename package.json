@@ -1,0 +1,61 @@
+{
+  "name": "@chainlink/cross-chain-vault-adapters",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Example cross-chain ERC-4626 vault adapters built on Chainlink CCIP, LayerZero OFT and Stargate. Community examples, not a Chainlink product.",
+  "scripts": {
+    "build": "forge build",
+    "sizes": "FOUNDRY_PROFILE=deploy forge build --sizes --json --skip test --skip script | node tools/check-sizes.mjs",
+    "clean": "forge clean",
+    "fmt": "forge fmt",
+    "fmt:check": "forge fmt --check",
+    "solhint": "pnpm solhint:ccip && pnpm solhint:multibridge",
+    "solhint:ccip": "solhint --max-warnings 17 \"./src/ccip/**/*.sol\"",
+    "solhint:multibridge": "solhint --max-warnings 26 \"./src/multibridge/**/*.sol\"",
+    "solhint-test": "solhint --config .solhint-test.json --ignore-path .solhintignore-test --max-warnings 0 \"./test/**/*.sol\" \"./script/**/*.sol\"",
+    "test": "forge test -vvv --no-match-path \"test/multibridge/fork/*\"",
+    "test:ccip": "forge test -vvv --match-path \"test/ccip/**\"",
+    "test:multibridge": "forge test -vvv --match-path \"test/multibridge/**\" --no-match-path \"test/multibridge/fork/*\"",
+    "test:fork": "forge test -vvv --match-path \"test/multibridge/fork/*\"",
+    "ccip:deploy-factory": "forge script script/ccip/DeployCrossChainERC4626AdapterFactory.s.sol:DeployCrossChainERC4626AdapterFactoryScript",
+    "ccip:deploy": "forge script script/ccip/DeployAndActivateCrossChainERC4626Adapter.s.sol:DeployAndActivateCrossChainERC4626AdapterScript",
+    "ccip:deploy-adapter-only": "forge script script/ccip/DeployCrossChainERC4626Adapter.s.sol:DeployCrossChainERC4626AdapterScript",
+    "ccip:configure": "forge script script/ccip/ConfigureCrossChainERC4626Adapter.s.sol:ConfigureCrossChainERC4626AdapterScript",
+    "ccip:check": "forge script script/ccip/CheckCrossChainERC4626Adapter.s.sol:CheckCrossChainERC4626AdapterScript",
+    "multibridge:deploy-factory": "FOUNDRY_PROFILE=deploy forge script script/multibridge/DeployImplementationAndFactory.s.sol:DeployImplementationAndFactory",
+    "multibridge:deploy": "FOUNDRY_PROFILE=deploy forge script script/multibridge/DeployProduction.s.sol:DeployProduction",
+    "e2e:ccip": "pnpm --filter @chainlink/cross-chain-vault-adapters-e2e-ccip run",
+    "e2e:multibridge": "pnpm --filter @chainlink/cross-chain-vault-adapters-e2e-multibridge run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smartcontractkit/cross-chain-vault-adapters.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/smartcontractkit/cross-chain-vault-adapters/issues"
+  },
+  "homepage": "https://github.com/smartcontractkit/cross-chain-vault-adapters#readme",
+  "engines": {
+    "node": ">=20.11",
+    "pnpm": ">=10"
+  },
+  "packageManager": "pnpm@10.11.1",
+  "devDependencies": {
+    "@chainlink/contracts": "1.5.0",
+    "@chainlink/contracts-ccip": "2.0.0",
+    "@chainlink/contracts-ccip-1.6.4": "npm:@chainlink/contracts-ccip@1.6.4",
+    "@layerzerolabs/lz-evm-messagelib-v2": "3.0.168",
+    "@layerzerolabs/lz-evm-protocol-v2": "3.0.168",
+    "@layerzerolabs/oapp-evm": "0.4.1",
+    "@layerzerolabs/oft-evm": "4.0.1",
+    "@openzeppelin/contracts-4.8.3": "npm:@openzeppelin/contracts@4.8.3",
+    "@openzeppelin/contracts-5.0.2": "npm:@openzeppelin/contracts@5.0.2",
+    "@openzeppelin/contracts-5.1.0": "npm:@openzeppelin/contracts@5.1.0",
+    "@openzeppelin/contracts-upgradeable-5.1.0": "npm:@openzeppelin/contracts-upgradeable@5.1.0",
+    "forge-std": "github:foundry-rs/forge-std#v1.9.7",
+    "solhint": "^5.2.0",
+    "solhint-plugin-chainlink-solidity": "github:smartcontractkit/chainlink-solhint-rules#v1.3.0",
+    "solidity-bytes-utils": "0.8.4"
+  }
+}

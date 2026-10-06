@@ -1,0 +1,88 @@
+# Foundry configuration for both vault adapter implementations.
+#
+# The contracts under src/ are frozen. Each implementation is compiled with its own pinned compiler
+# settings through `compilation_restrictions`; changing them changes the deployed bytecode:
+#
+#   src/ccip/          solc 0.8.24, via_ir, optimizer_runs = 1, evm_version = cancun (solc 0.8.24 default)
+#   src/multibridge/   solc 0.8.26, evm_version = paris, optimizer_runs = 200 (tests), see [profile.deploy]
+#
+# The Chainlink canonical profile is solc 0.8.26 / paris / via_ir / optimizer_runs = 200. When you add
+# a new implementation under src/, give it its own restriction (and profile) rather than relying on
+# the defaults below.
+
+[profile.default]
+src = "src"
+test = "test"
+script = "script"
+out = "foundry-artifacts"
+cache_path = "foundry-cache"
+libs = ["node_modules"]
+auto_detect_remappings = false
+# The test VM runs on cancun so the CCIP adapter (cancun bytecode) executes; the multibridge contracts are
+# still compiled for paris through their compilation restriction below.
+evm_version = "cancun"
+optimizer = true
+optimizer_runs = 200
+bytecode_hash = "none"
+cbor_metadata = false
+gas_price = 1
+block_timestamp = 1234567890
+block_number = 12345
+ffi = false
+fs_permissions = [{ access = "read", path = "./config" }, { access = "read-write", path = "./deployments" }]
+
+additional_compiler_profiles = [
+  { name = "ccip", via_ir = true, optimizer_runs = 1, evm_version = "cancun" },
+  { name = "multibridge", evm_version = "paris" },
+]
+compilation_restrictions = [
+  { paths = "src/ccip/**", version = "=0.8.24", via_ir = true, optimizer_runs = 1, evm_version = "cancun" },
+  { paths = "test/ccip/**", version = "=0.8.24", via_ir = true, optimizer_runs = 1, evm_version = "cancun" },
+  { paths = "script/ccip/**", version = "=0.8.24", via_ir = true, optimizer_runs = 1, evm_version = "cancun" },
+  { paths = "src/multibridge/**", version = "=0.8.26", evm_version = "paris" },
+  { paths = "test/multibridge/**", version = "=0.8.26", evm_version = "paris" },
+  { paths = "script/multibridge/**", version = "=0.8.26", evm_version = "paris" },
+]
+
+# Smallest bytecode for EIP-170 implementation deploys of the multibridge adapter.
+[profile.deploy]
+optimizer_runs = 1
+via_ir = true
+
+# Fuzz testing configuration
+[fuzz]
+runs = 512
+max_test_rejects = 1_000_000
+seed = '0x3e8'
+
+# Invariant testing configuration
+[invariant]
+runs = 256
+depth = 64
+fail_on_revert = false
+
+[lint]
+# forge-lint's naming rules contradict the Chainlink style guide (solhint is the authority).
+lint_on_build = false
+
+[fmt]
+tab_width = 2
+multiline_func_header = "params_first"
+sort_imports = true
+single_line_statement_blocks = "preserve"
+wrap_comments = true
+# Contract sources are frozen; formatting applies to tests and scripts only.
+ignore = ["src/**/*.sol"]
+
+# RPC aliases for `--rpc-url <alias>`. Forge reads the referenced env vars from `.env` at the repo root.
+# `ccip` is the target chain for the CCIP deploy scripts; the others are used by the multibridge fork
+# tests and scripts (see test/multibridge/fork/*).
+[rpc_endpoints]
+ccip = "${RPC_URL}"
+hub = "${HUB_RPC_URL}"
+spoke_a = "${SPOKE_A_RPC_URL}"
+spoke_b = "${SPOKE_B_RPC_URL}"
+spoke_fuji = "${SPOKE_FUJI_RPC_URL}"
+
+[etherscan]
+sepolia = { key = "${ETHERSCAN_API_KEY}" }

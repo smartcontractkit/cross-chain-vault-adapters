@@ -1,0 +1,7 @@
+# Only lint first-party source when running the root config directly.
+./lib
+./test
+./foundry-artifacts
+./foundry-cache
+./broadcast
+./node_modules

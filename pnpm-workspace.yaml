@@ -1,0 +1,28 @@
+packages:
+  - "e2e/*"
+  - "frontend/*"
+
+# Frontend-only resolution pins (no other workspace package depends on these).
+overrides:
+  # Keep a single copy of the Solana wallet-adapter React context: wallet-adapter-react-ui
+  # would otherwise pull a newer wallet-adapter-react/base via wallet-adapter-base-ui,
+  # splitting the WalletProvider context from the one the app renders.
+  "@solana/wallet-adapter-base": "0.9.27"
+  "@solana/wallet-adapter-base-ui": "0.1.6"
+  "@solana/wallet-adapter-react": "0.15.39"
+
+packageExtensions:
+  # The Solana Mobile Wallet Adapter packages declare react-native as a required peer.
+  # The frontends are browser-only, so mark it optional to avoid installing react-native.
+  "@solana-mobile/mobile-wallet-adapter-protocol":
+    peerDependenciesMeta:
+      react-native:
+        optional: true
+  "@solana-mobile/wallet-adapter-mobile":
+    peerDependenciesMeta:
+      react-native:
+        optional: true
+  "@react-native-async-storage/async-storage":
+    peerDependenciesMeta:
+      react-native:
+        optional: true

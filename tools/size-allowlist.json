@@ -1,0 +1,3 @@
+{
+  "_comment": "Contracts exempt from the EIP-170 runtime limit because they are intentionally deployed only on chains without it. Each entry pins the exact runtime size; the check fails if it changes. Keep this empty for contracts meant for all EVM chains."
+}
