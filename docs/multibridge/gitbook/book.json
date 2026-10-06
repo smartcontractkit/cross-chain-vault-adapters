@@ -1,0 +1,10 @@
+{
+  "title": "Cross-Chain Vault Adapter",
+  "description": "Deposit into and redeem from an ERC-4626 vault from any supported chain. Guides for vault issuers, front end integrators, and users.",
+  "language": "en",
+  "structure": {
+    "readme": "README.md",
+    "summary": "SUMMARY.md"
+  },
+  "plugins": ["-sharing", "-livereload"]
+}
