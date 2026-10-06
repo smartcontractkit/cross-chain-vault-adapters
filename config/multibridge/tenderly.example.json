@@ -1,0 +1,70 @@
+{
+  "_comment": "Tenderly multi-mainnet (Virtual TestNet) e2e config. Copy to config/multibridge/tenderly.json and fill in (set CONFIG=config/multibridge/tenderly.json in e2e/multibridge/.env). 'hub' = the chain where the ERC-4626 vault + adapter live (deposits/redeems settle here). 'spoke' = the source chain a user originates a deposit/redeem from. Numbers (selectors, eids, wei) may be JSON numbers or 0x-hex strings. Addresses are strings. See docs/multibridge/development/TENDERLY_E2E.md.",
+
+  "hub": {
+    "label": "Ethereum (Tenderly VTN)",
+    "rpcUrlEnv": "HUB_RPC_URL",
+    "chainId": 1,
+    "ccipRouter": "0x80226fc0Ee2b096224EeAc085Bb9a8cba1146f7D",
+    "lzEndpoint": "0x1a44076050125825900e736c501f859c50fE728c",
+    "weth": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    "ccipChainSelector": 5009297550715157269,
+    "lzEid": 30101,
+    "factory": "0x0000000000000000000000000000000000000000",
+    "implementation": "0x0000000000000000000000000000000000000000"
+  },
+
+  "spoke": {
+    "label": "Arbitrum (Tenderly VTN)",
+    "rpcUrlEnv": "SPOKE_A_RPC_URL",
+    "chainId": 42161,
+    "ccipRouter": "0x141fa059441E0ca23ce184B6A78bafD2A517DdE8",
+    "lzEndpoint": "0x1a44076050125825900e736c501f859c50fE728c",
+    "ccipChainSelector": 4949039107694359620,
+    "lzEid": 30110
+  },
+
+  "vaultAdapter": {
+    "_comment": "Inputs to CrossChainVaultAdapterFactory.deploy(DeployConfig), run on the HUB. CCIP inbound: source selector only. LZ inbound: (spoke eid, hub-local OFT). Outbound destinations must be listed too. owner receives DEFAULT_ADMIN_ROLE + both fee roles at deploy; feeCollector overrides FEE_COLLECTOR only. The loader also requires asset and share addresses in this block (the vault's underlying and share token, used to resolve inboundFees[].outboundToken = asset|share).",
+    "owner": "0xYourHubAdminAddress000000000000000000000",
+    "feeCollector": "0xYourFeeCollectorBot0000000000000000000",
+    "vault": "0xYourErc4626VaultOnHub00000000000000000000",
+    "asset": "0xVaultUnderlyingAssetOnHub0000000000000000",
+    "share": "0xYourErc4626VaultOnHub00000000000000000000",
+    "fundWei": 500000000000000000,
+    "requireLzReturnPrefunded": true,
+    "inboundFees": [
+      { "outboundToken": "share", "destination": 4949039107694359620, "fee": 0 }
+    ],
+
+    "lzSrcEids": [30110],
+    "lzSrcOfts": ["0xHubLocalOftThatDeliversInboundViaLzCompose"],
+
+    "ccipSrcSelectors": [4949039107694359620],
+
+    "ccipDstSelectors": [4949039107694359620],
+    "lzDstEids": [30110],
+
+    "oftTokens": ["0xAssetTokenOnHub", "0xYourErc4626VaultOnHub00000000000000000000"],
+    "ofts": ["0xAssetOftOnHub", "0xShareOftOnHub"]
+  },
+
+  "scenario": {
+    "_comment": "What InitiateTransfer originates FROM the spoke. channel = inbound rail (spoke->hub). The token+data are delivered to the hub adapter, which performs the vault action and then sends the result to message.destination (rail chosen by the hub's route registry, or by the destination's size when no route is set). recipient is an EVM address (left-padded to bytes32 for the message).",
+    "channel": "ccip",
+    "srcToken": "0xAssetTokenOnSpoke",
+    "srcOft": "0xAssetOftOnSpoke",
+    "amount": 100000000000000000000,
+    "inboundGasLimit": 350000,
+    "lzReceiveGasLimit": 80000,
+    "returnLegValueWei": 0,
+
+    "message": {
+      "_comment": "Slim VaultMessage (small for Solana origins). destination = the OUTBOUND chain the user routes the produced token to: a CCIP selector (> 4294967295) or a LayerZero EID (<= 4294967295), allowlisted by the operator on the matching rail. Gas is operator config, not in the message. Optional onlyLocalRefund (default false) blocks the permissionless refundToSource when failedMessageHandler is set.",
+      "minAmountOut": 0,
+      "destination": 4949039107694359620,
+      "recipient": "0xFinalRecipientForTheProducedToken00000000",
+      "failedMessageHandler": "0xWhoMayRetryOrRefundLocallyOnFailure000000"
+    }
+  }
+}

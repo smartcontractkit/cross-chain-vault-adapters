@@ -1,0 +1,478 @@
+{
+  "_comment": "Ethereum Sepolia hub for the multibridge E2E harness. hub.factory, hub.implementation, hub.app and adapters.*.app are empty: deploy the adapter first with bash script/multibridge/deploy-factory-sepolia.sh, paste the printed factory and implementation into hub.*, then run bash script/multibridge/deploy-adapter-sepolia.sh (writes deployments/multibridge/11155111.json) and set adapters.usdt.app. USDT flows: bash script/multibridge/run-spoke-e2e.sh. USDC/Fuji: bash script/multibridge/run-fuji-usdc-e2e.sh. Hub sync: bash script/multibridge/sync-hub-config-sepolia.sh (USDT) or bash script/multibridge/sync-hub-config-usdc-sepolia.sh (USDC).",
+
+  "hub": {
+    "label": "Ethereum Sepolia",
+    "rpcUrlEnv": "HUB_RPC_URL",
+    "chainId": 11155111,
+    "ccipRouter": "0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59",
+    "lzEndpoint": "0x6EDCE65403992e310A62460808c4b910D972f10f",
+    "weth": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+    "ccipChainSelector": 16015286601757825753,
+    "lzEid": 40161,
+    "factory": "0x0000000000000000000000000000000000000000",
+    "implementation": "0x0000000000000000000000000000000000000000",
+    "app": "0x0000000000000000000000000000000000000000"
+  },
+
+  "spokes": {
+    "arbitrumSepolia": {
+      "label": "Arbitrum Sepolia",
+      "rpcUrlEnv": "SPOKE_A_RPC_URL",
+      "chainId": 421614,
+      "ccipRouter": "0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165",
+      "lzEndpoint": "0x6EDCE65403992e310A62460808c4b910D972f10f",
+      "ccipChainSelector": 3478487238524512106,
+      "lzEid": 40231,
+      "_shareTokenComment": "CCIP-bridged vault share on Arbitrum Sepolia (NOT the hub vault address). Paste from your TokenPool or wallet after a deposit delivers shares here.",
+      "shareToken": "0x28838006a574b579ddF10b8630EcFE0Ff29083a7"
+    },
+    "bscTestnet": {
+      "label": "BSC Testnet",
+      "rpcUrlEnv": "SPOKE_BSC_RPC_URL",
+      "chainId": 97,
+      "ccipRouter": "0xE1053aE1857476f36A3C62580FF9b016E8EE8F6f",
+      "lzEndpoint": "0x6EDCE65403992e310A62460808c4b910D972f10f",
+      "ccipChainSelector": 13264668187771770619,
+      "lzEid": 40102,
+      "shareToken": "0xe9E43e42a547f109A8B98b10b7f179A10BE5aCB9"
+    },
+    "avalancheFuji": {
+      "label": "Avalanche Fuji",
+      "rpcUrlEnv": "SPOKE_FUJI_RPC_URL",
+      "chainId": 43113,
+      "ccipRouter": "0xF694E193200268f9a4868e4Aa017A0118C9a8177",
+      "lzEndpoint": "0x6EDCE65403992e310A62460808c4b910D972f10f",
+      "ccipChainSelector": 14767482510784806043,
+      "lzEid": 40106,
+      "shareToken": "0x7fdcdB3D75Bb1463dac9d07310a80A1f6efc7e51"
+    }
+  },
+
+  "adapters": {
+    "usdt": {
+      "app": "0x0000000000000000000000000000000000000000",
+      "vault": "0x9cdaf9FBD293E3C7AfFAd34f4bcD947b2296fc14",
+      "asset": "0xF3F2b4815A58152c9BE53250275e8211163268BA",
+      "share": "0x9cdaf9FBD293E3C7AfFAd34f4bcD947b2296fc14"
+    },
+    "usdc": {
+      "_appComment": "USDC vault adapter clone (Fuji CCIP spoke).",
+      "app": "0x0000000000000000000000000000000000000000",
+      "vault": "0xF3e24BC4F7aB477dfF61Ffe576272EDb98318DF3",
+      "asset": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+      "share": "0xF3e24BC4F7aB477dfF61Ffe576272EDb98318DF3"
+    }
+  },
+
+  "vaultAdapter": {
+    "_comment": "Vault on Ethereum Sepolia. lzSrcEids/Ofts = inbound LayerZero/Stargate allowlist (hub-local OFT/pool per source EID). Run bash script/multibridge/sync-inbound-lz-sepolia.sh after editing.",
+    "owner": "0x0000000000000000000000000000000000000000",
+    "feeCollector": "0x0000000000000000000000000000000000000000",
+    "_feeCollectorComment": "Optional override for FEE_COLLECTOR_ROLE; zero => same as owner (both fee roles go to admin by default).",
+    "vault": "0x9cdaf9FBD293E3C7AfFAd34f4bcD947b2296fc14",
+    "asset": "0xF3F2b4815A58152c9BE53250275e8211163268BA",
+    "share": "0x9cdaf9FBD293E3C7AfFAd34f4bcD947b2296fc14",
+    "assetOft": "0xc099cD946d5efCC35A99D64E808c1430cEf08126",
+    "stargateUsdtPool": "0x9D819CcAE96d41d8F775bD1259311041248fF980",
+    "fundWei": 100000000000000000,
+    "weth": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+
+    "lzSrcEids": [40231, 40102, 40231],
+    "lzSrcOfts": [
+      "0x9D819CcAE96d41d8F775bD1259311041248fF980",
+      "0x9D819CcAE96d41d8F775bD1259311041248fF980",
+      "0xc099cD946d5efCC35A99D64E808c1430cEf08126"
+    ],
+
+    "ccipSrcSelectors": [3478487238524512106, 13264668187771770619],
+
+    "requireLzReturnPrefunded": true,
+    "inboundFees": [
+      {
+        "outboundToken": "share",
+        "destination": 3478487238524512106,
+        "fee": 10000
+      },
+      {
+        "outboundToken": "share",
+        "destination": 13264668187771770619,
+        "fee": 10000
+      },
+      {
+        "outboundToken": "asset",
+        "destination": 40231,
+        "fee": 10000
+      },
+      {
+        "outboundToken": "asset",
+        "destination": 40102,
+        "fee": 10000
+      }
+    ],
+    "_inboundFeesComment": "CCIP spokes: fee in inbound token units (USDT on deposit, shares on redeem→Stargate). LZ/Stargate spokes: originator prefunds return leg in ETH via compose value (requireLzReturnPrefunded).",
+
+    "ccipDstSelectors": [3478487238524512106, 10344971235874465080, 13264668187771770619],
+    "lzDstEids": [],
+    "stargateDstEids": [40231, 40102],
+
+    "oftTokens": ["0xF3F2b4815A58152c9BE53250275e8211163268BA"],
+    "ofts": ["0x9D819CcAE96d41d8F775bD1259311041248fF980"]
+  },
+
+  "routes": [
+    {
+      "token": "share",
+      "destination": 3478487238524512106,
+      "rail": "CCIP",
+      "endpoint": "0x0000000000000000000000000000000000000000"
+    },
+    {
+      "token": "share",
+      "destination": 10344971235874465080,
+      "rail": "CCIP",
+      "endpoint": "0x0000000000000000000000000000000000000000"
+    },
+    {
+      "token": "share",
+      "destination": 13264668187771770619,
+      "rail": "CCIP",
+      "endpoint": "0x0000000000000000000000000000000000000000"
+    },
+    {
+      "token": "asset",
+      "destination": 40231,
+      "rail": "STARGATE",
+      "endpoint": "0x9D819CcAE96d41d8F775bD1259311041248fF980"
+    },
+    {
+      "token": "asset",
+      "destination": 40102,
+      "rail": "STARGATE",
+      "endpoint": "0x9D819CcAE96d41d8F775bD1259311041248fF980"
+    }
+  ],
+
+  "vaultAdapterUsdc": {
+    "_comment": "USDC vault adapter on Sepolia (separate clone from USDT). CCIP-only Fuji spoke.",
+    "vault": "0xF3e24BC4F7aB477dfF61Ffe576272EDb98318DF3",
+    "asset": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+    "share": "0xF3e24BC4F7aB477dfF61Ffe576272EDb98318DF3",
+    "lzSrcEids": [],
+    "lzSrcOfts": [],
+    "ccipSrcSelectors": [14767482510784806043],
+    "ccipDstSelectors": [14767482510784806043],
+    "fundWei": 100000000000000000,
+    "weth": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+    "requireLzReturnPrefunded": false,
+    "inboundFees": [
+      {
+        "outboundToken": "share",
+        "destination": 14767482510784806043,
+        "fee": 10000
+      },
+      {
+        "outboundToken": "asset",
+        "destination": 14767482510784806043,
+        "fee": 10000
+      }
+    ],
+    "_inboundFeesComment": "Fuji CCIP: fee in inbound token units (USDC on deposit, shares on redeem).",
+    "stargateDstEids": [],
+    "_revokeComment": "Clear mistaken LZ/Stargate allowlists if factory.deploy or USDT sync was applied to this clone.",
+    "revokeLzEids": [40231, 40102, 40231],
+    "revokeLzOfts": [
+      "0x9D819CcAE96d41d8F775bD1259311041248fF980",
+      "0x9D819CcAE96d41d8F775bD1259311041248fF980",
+      "0xc099cD946d5efCC35A99D64E808c1430cEf08126"
+    ],
+    "revokeStargateDstEids": [40231, 40102],
+    "revokeCcipSrcSelectors": [3478487238524512106, 13264668187771770619],
+    "revokeCcipDstSelectors": [3478487238524512106, 10344971235874465080, 13264668187771770619]
+  },
+
+  "usdcRoutes": [
+    {
+      "token": "share",
+      "destination": 14767482510784806043,
+      "rail": "CCIP",
+      "endpoint": "0x0000000000000000000000000000000000000000"
+    },
+    {
+      "token": "asset",
+      "destination": 14767482510784806043,
+      "rail": "CCIP",
+      "endpoint": "0x0000000000000000000000000000000000000000"
+    }
+  ],
+
+  "scenarios": {
+    "deposit-fuji-usdc": {
+      "_comment": "CCIP USDC from Avalanche Fuji → hub deposit → CCIP vault shares back to Fuji (returnTo ccip). Requires adapters.usdc.app + Fuji USDC balance.",
+      "adapter": "usdc",
+      "spoke": "avalancheFuji",
+      "channel": "ccip",
+      "srcToken": "0x5425890298aed601595a70AB815c96711a31Bc65",
+      "srcOft": "0x0000000000000000000000000000000000000000",
+      "amount": 1000000,
+      "inboundGasLimit": 500000,
+      "lzReceiveGasLimit": 80000,
+      "returnLegValueWei": 0,
+      "message": {
+        "minAmountOut": 0,
+        "returnTo": "ccip",
+        "destination": 0,
+        "recipient": "0x0000000000000000000000000000000000000000",
+        "failedMessageHandler": "0x0000000000000000000000000000000000000000"
+      }
+    },
+    "redeem-fuji-usdc": {
+      "_comment": "CCIP vault shares from Fuji → hub redeem → CCIP USDC back to Fuji. Requires spokes.avalancheFuji.shareToken balance.",
+      "adapter": "usdc",
+      "spoke": "avalancheFuji",
+      "useSpokeShareToken": true,
+      "channel": "ccip",
+      "srcToken": "0x0000000000000000000000000000000000000000",
+      "srcOft": "0x0000000000000000000000000000000000000000",
+      "amount": 999000,
+      "inboundGasLimit": 500000,
+      "lzReceiveGasLimit": 80000,
+      "returnLegValueWei": 0,
+      "message": {
+        "minAmountOut": 0,
+        "returnTo": "ccip",
+        "destination": 0,
+        "recipient": "0x0000000000000000000000000000000000000000",
+        "failedMessageHandler": "0x0000000000000000000000000000000000000000"
+      }
+    },
+    "fail-deposit-fuji-usdc": {
+      "_comment": "Same as deposit-fuji-usdc but minAmountOut forced to max → hub MinAmountOutNotMet → MessageFailed. Recover with GUID=… pnpm e2e:multibridge recover:refund (uses adapters.usdc).",
+      "adapter": "usdc",
+      "spoke": "avalancheFuji",
+      "failSlippage": true,
+      "channel": "ccip",
+      "srcToken": "0x5425890298aed601595a70AB815c96711a31Bc65",
+      "srcOft": "0x0000000000000000000000000000000000000000",
+      "amount": 1000000,
+      "inboundGasLimit": 500000,
+      "lzReceiveGasLimit": 80000,
+      "returnLegValueWei": 0,
+      "message": {
+        "minAmountOut": 0,
+        "returnTo": "ccip",
+        "destination": 0,
+        "recipient": "0x0000000000000000000000000000000000000000",
+        "failedMessageHandler": "0x0000000000000000000000000000000000000000"
+      }
+    },
+    "fail-redeem-fuji-usdc": {
+      "_comment": "Same as redeem-fuji-usdc but slippage breach on hub redeem → capture shares on hub.",
+      "adapter": "usdc",
+      "spoke": "avalancheFuji",
+      "useSpokeShareToken": true,
+      "failSlippage": true,
+      "channel": "ccip",
+      "srcToken": "0x0000000000000000000000000000000000000000",
+      "srcOft": "0x0000000000000000000000000000000000000000",
+      "amount": 999000,
+      "inboundGasLimit": 500000,
+      "lzReceiveGasLimit": 80000,
+      "returnLegValueWei": 0,
+      "message": {
+        "minAmountOut": 0,
+        "returnTo": "ccip",
+        "destination": 0,
+        "recipient": "0x0000000000000000000000000000000000000000",
+        "failedMessageHandler": "0x0000000000000000000000000000000000000000"
+      }
+    },
+    "redeem-arbitrum": {
+      "_comment": "Redeem: CCIP vault shares from Arbitrum Sepolia → hub redeem → Stargate USDT back to Arbitrum (destination 40231 = Arbitrum LZ EID). Requires shares on Arbitrum + spokes.arbitrumSepolia.shareToken.",
+      "spoke": "arbitrumSepolia",
+      "useSpokeShareToken": true,
+      "channel": "ccip",
+      "srcToken": "0x0000000000000000000000000000000000000000",
+      "srcOft": "0x0000000000000000000000000000000000000000",
+      "amount": 999000,
+      "inboundGasLimit": 500000,
+      "lzReceiveGasLimit": 80000,
+      "returnLegValueWei": 0,
+      "message": {
+        "minAmountOut": 0,
+        "returnTo": "stargate",
+        "destination": 0,
+        "recipient": "0x0000000000000000000000000000000000000000",
+        "failedMessageHandler": "0x0000000000000000000000000000000000000000"
+      }
+    },
+    "redeem-bsc": {
+      "_comment": "Redeem: CCIP vault shares from BSC testnet → hub redeem → Stargate USDT back to BSC. Requires spokes.bscTestnet.shareToken + CCIP inbound allowlist for BSC on the hub adapter.",
+      "spoke": "bscTestnet",
+      "useSpokeShareToken": true,
+      "channel": "ccip",
+      "srcToken": "0x0000000000000000000000000000000000000000",
+      "srcOft": "0x0000000000000000000000000000000000000000",
+      "amount": 999000,
+      "inboundGasLimit": 500000,
+      "lzReceiveGasLimit": 80000,
+      "returnLegValueWei": 0,
+      "message": {
+        "minAmountOut": 0,
+        "returnTo": "stargate",
+        "destination": 0,
+        "recipient": "0x0000000000000000000000000000000000000000",
+        "failedMessageHandler": "0x0000000000000000000000000000000000000000"
+      }
+    },
+    "stargate-arbitrum": {
+      "_comment": "Stargate USDT from Arbitrum Sepolia → hub → CCIP shares back to Arbitrum Sepolia.",
+      "spoke": "arbitrumSepolia",
+      "channel": "layerzero",
+      "srcToken": "0x095f40616FA98Ff75D1a7D0c68685c5ef806f110",
+      "srcOft": "0xB956d6FDFB235636DE7885C5166756823bb27e3a",
+      "amount": 1000000,
+      "inboundGasLimit": 500000,
+      "lzReceiveGasLimit": 80000,
+      "returnLegValueWei": 5000000000000000,
+      "message": {
+        "minAmountOut": 0,
+        "returnTo": "ccip",
+        "destination": 0,
+        "recipient": "0x0000000000000000000000000000000000000000",
+        "failedMessageHandler": "0x0000000000000000000000000000000000000000"
+      }
+    },
+    "stargate-bsc": {
+      "_comment": "Stargate USDT from BSC testnet → hub → CCIP shares back to BSC testnet (returnTo ccip uses spoke ccipChainSelector).",
+      "spoke": "bscTestnet",
+      "channel": "layerzero",
+      "srcToken": "0xe37Bdc6F09DAB6ce6E4eBC4d2E72792994Ef3765",
+      "srcOft": "0xf1b69ee3097c6E8CC6487B7667dB818FeDC7b1a9",
+      "amount": 1000000,
+      "inboundGasLimit": 500000,
+      "lzReceiveGasLimit": 80000,
+      "returnLegValueWei": 5000000000000000,
+      "message": {
+        "minAmountOut": 0,
+        "returnTo": "ccip",
+        "destination": 0,
+        "recipient": "0x0000000000000000000000000000000000000000",
+        "failedMessageHandler": "0x0000000000000000000000000000000000000000"
+      }
+    },
+    "fail-deposit-arbitrum": {
+      "_comment": "Same as stargate-arbitrum but minAmountOut forced to max → hub MinAmountOutNotMet → MessageFailed. Recover with GUID=… pnpm e2e:multibridge recover:refund.",
+      "spoke": "arbitrumSepolia",
+      "failSlippage": true,
+      "channel": "layerzero",
+      "srcToken": "0x095f40616FA98Ff75D1a7D0c68685c5ef806f110",
+      "srcOft": "0xB956d6FDFB235636DE7885C5166756823bb27e3a",
+      "amount": 1000000,
+      "inboundGasLimit": 500000,
+      "lzReceiveGasLimit": 80000,
+      "returnLegValueWei": 5000000000000000,
+      "message": {
+        "minAmountOut": 0,
+        "returnTo": "ccip",
+        "destination": 0,
+        "recipient": "0x0000000000000000000000000000000000000000",
+        "failedMessageHandler": "0x0000000000000000000000000000000000000000"
+      }
+    },
+    "fail-deposit-bsc": {
+      "_comment": "Same as stargate-bsc but slippage breach on hub deposit → capture USDT on hub.",
+      "spoke": "bscTestnet",
+      "failSlippage": true,
+      "channel": "layerzero",
+      "srcToken": "0xe37Bdc6F09DAB6ce6E4eBC4d2E72792994Ef3765",
+      "srcOft": "0xf1b69ee3097c6E8CC6487B7667dB818FeDC7b1a9",
+      "amount": 1000000,
+      "inboundGasLimit": 500000,
+      "lzReceiveGasLimit": 80000,
+      "returnLegValueWei": 5000000000000000,
+      "message": {
+        "minAmountOut": 0,
+        "returnTo": "ccip",
+        "destination": 0,
+        "recipient": "0x0000000000000000000000000000000000000000",
+        "failedMessageHandler": "0x0000000000000000000000000000000000000000"
+      }
+    },
+    "fail-redeem-arbitrum": {
+      "_comment": "Same as redeem-arbitrum but slippage breach on hub redeem → capture shares on hub.",
+      "spoke": "arbitrumSepolia",
+      "useSpokeShareToken": true,
+      "failSlippage": true,
+      "channel": "ccip",
+      "srcToken": "0x0000000000000000000000000000000000000000",
+      "srcOft": "0x0000000000000000000000000000000000000000",
+      "amount": 999000,
+      "inboundGasLimit": 500000,
+      "lzReceiveGasLimit": 80000,
+      "returnLegValueWei": 0,
+      "message": {
+        "minAmountOut": 0,
+        "returnTo": "stargate",
+        "destination": 0,
+        "recipient": "0x0000000000000000000000000000000000000000",
+        "failedMessageHandler": "0x0000000000000000000000000000000000000000"
+      }
+    },
+    "fail-redeem-bsc": {
+      "_comment": "Redeem from BSC with slippage breach. Requires spokes.bscTestnet.shareToken (CCIP share on BSC).",
+      "spoke": "bscTestnet",
+      "useSpokeShareToken": true,
+      "failSlippage": true,
+      "channel": "ccip",
+      "srcToken": "0x0000000000000000000000000000000000000000",
+      "srcOft": "0x0000000000000000000000000000000000000000",
+      "amount": 999000,
+      "inboundGasLimit": 500000,
+      "lzReceiveGasLimit": 80000,
+      "returnLegValueWei": 0,
+      "message": {
+        "minAmountOut": 0,
+        "returnTo": "stargate",
+        "destination": 0,
+        "recipient": "0x0000000000000000000000000000000000000000",
+        "failedMessageHandler": "0x0000000000000000000000000000000000000000"
+      }
+    },
+    "stargate": {
+      "_comment": "Alias for stargate-arbitrum (backward compatible).",
+      "spoke": "arbitrumSepolia",
+      "channel": "layerzero",
+      "srcToken": "0x095f40616FA98Ff75D1a7D0c68685c5ef806f110",
+      "srcOft": "0xB956d6FDFB235636DE7885C5166756823bb27e3a",
+      "amount": 1000000,
+      "inboundGasLimit": 500000,
+      "lzReceiveGasLimit": 80000,
+      "returnLegValueWei": 5000000000000000,
+      "message": {
+        "minAmountOut": 0,
+        "returnTo": "ccip",
+        "destination": 0,
+        "recipient": "0x0000000000000000000000000000000000000000",
+        "failedMessageHandler": "0x0000000000000000000000000000000000000000"
+      }
+    },
+    "usdt0": {
+      "_comment": "USDT0 OFT on Ethereum Sepolia (hub-local). Vault asset is Stargate USDT — expect UnsupportedToken unless aligned.",
+      "originateOn": "hub",
+      "channel": "layerzero",
+      "srcToken": "0xc4DCC311c028e341fd8602D8eB89c5de94625927",
+      "srcOft": "0xc099cD946d5efCC35A99D64E808c1430cEf08126",
+      "amount": 1000000,
+      "inboundGasLimit": 500000,
+      "lzReceiveGasLimit": 80000,
+      "returnLegValueWei": 5000000000000000,
+      "message": {
+        "minAmountOut": 0,
+        "destination": 3478487238524512106,
+        "recipient": "0x0000000000000000000000000000000000000000",
+        "failedMessageHandler": "0x0000000000000000000000000000000000000000"
+      }
+    }
+  }
+}

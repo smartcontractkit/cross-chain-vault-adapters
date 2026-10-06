@@ -1,0 +1,47 @@
+{
+  "_comment": "Production deploy config for script/multibridge/DeployProduction.s.sol (run with pnpm multibridge:deploy). Copy to config/multibridge/deployment.json and fill in. Define the HOME chain (where the ERC-4626 vault lives), the vault + its asset/share, and a list of OUTBOUND routes — each a (supported network, token, bridge rail). Networks are referenced by key; the script resolves selectors/EIDs/endpoints from script/multibridge/config/Networks.sol (the address book). The broadcasting DEPLOYER is the temporary admin during deploy and installs the routes; when it differs from home.owner the script then calls transferAdmin so home.owner ends with DEFAULT_ADMIN_ROLE + FEE_SETTER_ROLE, and FEE_COLLECTOR_ROLE goes to home.feeCollector (or home.owner when zero). Numbers may be JSON numbers or 0x-hex strings. See docs/multibridge/operator/DEPLOYMENT_CONFIG.md. VERIFY all addresses against official sources before mainnet.",
+
+  "home": {
+    "_comment": "network = a key in Networks.sol (ethereum|arbitrum|optimism|base|polygon|avalanche|bnb). vault = the ERC-4626 on this chain. asset = the vault's underlying; assetSymbol selects the Stargate pool (USDT|USDC). share = the share token (== vault for ERC-4626). assetOft/shareOft = the home-local LayerZero OFTs used for LZ_OFT routes + inbound bounce (assetOft for USDT defaults conceptually to the chain's USDT0 adapter — paste it explicitly). defaultSvmComputeUnits applies to CCIP_SVM (Solana) lanes and must be 0 (token-only transfers).",
+    "network": "ethereum",
+    "owner": "0xYourHubAdminMultisig00000000000000000000",
+    "feeCollector": "0xYourFeeCollectorBot0000000000000000000",
+    "vault": "0xYourErc4626VaultOnHub00000000000000000000",
+    "asset": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    "assetSymbol": "USDT",
+    "assetOft": "0x6C96dE32CEa08842dcc4058c14d3aaAD7Fa41dee",
+    "share": "0xYourErc4626VaultOnHub00000000000000000000",
+    "shareOft": "0x0000000000000000000000000000000000000000",
+    "fundWei": 500000000000000000,
+    "defaultSvmComputeUnits": 0,
+    "factory": "0x0000000000000000000000000000000000000000",
+    "implementation": "0x0000000000000000000000000000000000000000"
+  },
+
+  "_routesComment": "One entry per (supported network, produced token, rail). token: 'asset' (USDT out on redeem) or 'share' (vault token out on deposit). rail: LZ_OFT (USDT0/OFT) | STARGATE (pooled, asset only) | CCIP (EVM) | CCIP_SVM (Solana) | LOCAL (same-chain: ERC-20 sent directly to the recipient, no bridge, destination key 0; 'network' is ignored). IMPORTANT: each route object must contain ONLY network/token/rail — no extra keys (vm.parseJson decodes positionally). Examples below: same-chain LOCAL for both tokens; USDT->Arbitrum over USDT0; USDT->BNB/Avalanche over Stargate; USDT->Solana over USDT0 mesh; share->Optimism over CCIP; share->Solana over CCIP-SVM.",
+  "routes": [
+    { "network": "ethereum", "token": "asset", "rail": "LOCAL" },
+    { "network": "ethereum", "token": "share", "rail": "LOCAL" },
+    { "network": "arbitrum", "token": "asset", "rail": "LZ_OFT" },
+    { "network": "bnb", "token": "asset", "rail": "STARGATE" },
+    { "network": "avalanche", "token": "asset", "rail": "STARGATE" },
+    { "network": "solana", "token": "asset", "rail": "LZ_OFT" },
+    { "network": "optimism", "token": "share", "rail": "CCIP" },
+    { "network": "solana", "token": "share", "rail": "CCIP_SVM" }
+  ],
+
+  "inbound": {
+    "_comment": "Allowlists for deposits/redeems ORIGINATING from spokes. LayerZero: (srcEid, HOME-local OFT that delivers the token via lzCompose). CCIP: sourceChainSelector only.",
+    "lzSrcEids": [30110, 30168],
+    "lzSrcOfts": ["0x6C96dE32CEa08842dcc4058c14d3aaAD7Fa41dee", "0x6C96dE32CEa08842dcc4058c14d3aaAD7Fa41dee"],
+    "ccipSrcSelectors": [3734403246176062136]
+  },
+
+  "returnLegFees": {
+    "_comment": "Installed by factory.deploy on the 4626 adapter. requireLzReturnPrefunded for LZ/Stargate spokes. inboundFees for CCIP spokes — outboundToken asset|share, destination = route key, fee in inbound token units.",
+    "requireLzReturnPrefunded": true,
+    "inboundFees": [
+      { "outboundToken": "share", "destination": 3734403246176062136, "fee": 10000 }
+    ]
+  }
+}
