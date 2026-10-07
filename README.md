@@ -190,7 +190,8 @@ Put new contracts under a `dev/` directory until they are reviewed, and give eac
 
 - CCIP: `cp .env.example .env`, fill it in, then `pnpm ccip:deploy --rpc-url ccip` (dry run),
   add `--account <keystore> --broadcast` to deploy, `pnpm ccip:configure` for CCIP v2 lanes and funding, and
-  `pnpm ccip:check` to verify. Step by step in the
+  `pnpm ccip:check` to verify. `pnpm ccip:build-payload` is the read-only companion for users: it previews a
+  deposit or a redemption and prints the 128-byte request payload. Step by step in the
   [deployment guide](docs/ccip/cross-chain-erc4626-adapter-deployment-guide.md); operations in the
   [operator guide](docs/ccip/cross-chain-erc4626-adapter-operator-guide.md).
 - Example vault (testnets only):
