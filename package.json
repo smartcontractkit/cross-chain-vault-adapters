@@ -22,6 +22,8 @@
     "ccip:deploy-adapter-only": "forge script script/ccip/DeployCrossChainERC4626Adapter.s.sol:DeployCrossChainERC4626AdapterScript",
     "ccip:configure": "forge script script/ccip/ConfigureCrossChainERC4626Adapter.s.sol:ConfigureCrossChainERC4626AdapterScript",
     "ccip:check": "forge script script/ccip/CheckCrossChainERC4626Adapter.s.sol:CheckCrossChainERC4626AdapterScript",
+    "ccip:build-payload": "forge script script/ccip/BuildPayload.s.sol:BuildPayloadScript",
+    "ccip:deploy-example-vault": "forge script script/ccip/DeployExampleERC4626Vault.s.sol:DeployExampleERC4626VaultScript",
     "multibridge:deploy-factory": "FOUNDRY_PROFILE=deploy forge script script/multibridge/DeployImplementationAndFactory.s.sol:DeployImplementationAndFactory",
     "multibridge:deploy": "FOUNDRY_PROFILE=deploy forge script script/multibridge/DeployProduction.s.sol:DeployProduction",
     "e2e:ccip": "pnpm --filter @chainlink/cross-chain-vault-adapters-e2e-ccip run",

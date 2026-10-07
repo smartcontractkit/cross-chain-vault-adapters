@@ -51,6 +51,7 @@ resolves to `RPC_URL` from that file (see the `[rpc_endpoints]` section of `foun
 | `pnpm ccip:check` | `CheckCrossChainERC4626Adapter.s.sol` | Read-only report of the adapter, with warnings for common misconfigurations |
 | `pnpm ccip:deploy-factory` | `DeployCrossChainERC4626AdapterFactory.s.sol` | Deploys only a factory, for later `deploy` calls (Path A) |
 | `pnpm ccip:deploy-adapter-only` | `DeployCrossChainERC4626Adapter.s.sol` | Constructor-only deploy (Path B) |
+| `pnpm ccip:build-payload` | `BuildPayload.s.sol` | Read-only: previews a deposit or a redemption, applies the tolerance, and prints the 128-byte user request payload |
 
 The scripts live in `script/ccip/`.
 

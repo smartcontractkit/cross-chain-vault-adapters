@@ -71,6 +71,7 @@ pnpm ccip:deploy --rpc-url ccip                       # dry run
 pnpm ccip:deploy --rpc-url ccip --account deployer --broadcast
 pnpm ccip:configure --rpc-url ccip --account admin --broadcast   # CCIP v2 lane settings and native funding
 pnpm ccip:check --rpc-url ccip                        # read-only report with warnings
+pnpm ccip:build-payload --rpc-url ccip                # read-only: print the 128-byte user request payload
 ```
 
 `pnpm ccip:deploy` deploys a factory (or reuses `FACTORY`) and a configured adapter, and writes
