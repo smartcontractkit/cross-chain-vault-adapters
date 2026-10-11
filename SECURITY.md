@@ -2,8 +2,7 @@
 
 ## Reporting a vulnerability
 
-Report vulnerabilities through [chain.link/security](https://chain.link/security) or by email to
-security@chainlink.io. Do not open a public GitHub issue, pull request, or discussion for a security report.
+Report vulnerabilities through [chain.link/security](https://chain.link/security). Do not open a public GitHub issue, pull request, or discussion for a security report.
 
 Include the affected contract or file, the impact, and the steps or a proof of concept to reproduce it.
 
