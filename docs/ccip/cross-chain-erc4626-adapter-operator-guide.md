@@ -475,7 +475,7 @@ If anything fails during processing:
 - the outbound encoding family for a later refund is stored in `refundChainFamilySnapshot[messageId]`
 - `MessageFailed` is emitted
 
-Because `ccipReceive` does not revert, the CCIP execution succeeds and the CCIP Explorer shows the message as `SUCCESS`, not `FAILED`, even though the adapter recorded a failure. Monitor `MessageFailed` events or `messageErrorCode(messageId) == BASIC` to find messages that need a refund or local recovery. A CCIP-level `FAILED` status only occurs when `ccipReceive` itself reverts (for example the destination execution runs out of gas).
+Because `ccipReceive` catches these failures, the CCIP execution succeeds and the CCIP Explorer shows the message as `SUCCESS`, not `FAILED`, even though the adapter recorded a failure. Monitor `MessageFailed` events or `messageErrorCode(messageId) == BASIC` to find messages that need a refund or local recovery. A CCIP-level `FAILED` status only occurs when `ccipReceive` itself reverts: the destination execution runs out of gas, or the payload is 128 bytes but cannot be ABI-decoded (a `target` word that is not a valid address). In the second case the adapter records nothing and manual execution reverts the same way; see [Malformed payloads](cross-chain-erc4626-adapter-contract-reference.md#malformed-payloads).
 
 This means failed messages are recoverable rather than silently lost.
 

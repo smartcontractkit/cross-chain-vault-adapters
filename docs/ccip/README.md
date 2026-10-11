@@ -47,8 +47,10 @@ This makes it possible to treat an ERC-4626 vault as a cross-chain endpoint with
    `abi.encode(address target, bytes32 beneficiary, uint256 minimumOut, uint256 deliveryAndRefund)`. The same
    payload is used for EVM and SVM sources. `deliveryAndRefund` packs `returnToSourceChain` (bit 0) and an optional
    `localRefundAddress` on the destination chain (bits 1..160; `address(0)` disables local recovery).
-2. The CCIP router calls `ccipReceive()` on the adapter. The adapter checks only that the caller is its router, then
-   runs `processMessage()` in an external self-call wrapped in `try`/`catch`.
+2. The CCIP router calls `ccipReceive()` on the adapter. The adapter checks that the caller is its router, then
+   runs `processMessage()` in an external self-call wrapped in `try`/`catch`. A 128-byte payload that cannot be
+   ABI-decoded (a `target` word that is not a valid address) makes `ccipReceive()` itself revert; see
+   [Malformed payloads](cross-chain-erc4626-adapter-contract-reference.md#malformed-payloads).
 3. `processMessage()` checks that the source chain selector is configured, the payload is valid, and the vault
    `target` is enabled.
 4. If the inbound token is the vault asset, the adapter deposits; if it is the vault share token, it redeems.
