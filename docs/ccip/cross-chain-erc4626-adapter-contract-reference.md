@@ -153,6 +153,17 @@ Failures and refunds:
 
 If `processMessage` reverts, `ccipReceive` uses a bare `catch` (no revert-data materialization) so failure persistence cannot be bypassed by oversized revert payloads. It sets `messageErrorCode[messageId] = BASIC`, stores a minimal `FailedMessageRecord` (`sourceChainSelector`, `sender`, `destTokenAmounts`, `localRefundAddress`—no full `message.data`), emits `MessageFailed`. Because the revert is caught, the CCIP execution itself succeeds: the CCIP Explorer / API shows the message as `SUCCESS`, not `FAILED`. Detect adapter-level failures with `MessageFailed` or `messageErrorCode(messageId) == BASIC`.
 
+#### Malformed payloads
+
+`ccipReceive` reverts for two reasons other than running out of gas: the caller is not `ROUTER` (`InvalidRouter`), or the payload cannot be decoded. How a malformed payload is handled depends on its length:
+
+| `message.data` | Result |
+|----------------|--------|
+| Not exactly 128 bytes | `processMessage` reverts `InvalidPayloadLength` and `ccipReceive` catches it. The message is recorded as failed, but with `localRefundAddress = address(0)`, so only the cross-chain refund is available. |
+| 128 bytes, `target` word has non-zero upper 96 bits | `abi.decode` reverts in `processMessage`, and the same decode in the catch (`_storeFailedMessageRecord`) reverts too. `ccipReceive` reverts, the CCIP message shows as `FAILED`, and the adapter records nothing, so neither `refundFailedMessage` nor `recoverFailedMessageLocally` applies. Manual execution reverts the same way. |
+
+The other three words (`beneficiary`, `minimumOut`, `deliveryAndRefund`) accept any value, so they cannot cause a decode failure. Encode the payload with `abi.encode` of the `Payload` struct (or the encoders in this repo) to rule out both cases.
+
 - `checkRefundEligibility`, `estimateRefundFee`, `refundFailedMessage` implement the permissionless cross-chain refund (`refundFailedMessage` can be called by any address, which pays the CCIP fee in `msg.value` and receives any excess back).
 - `checkLocalRecoveryEligibility`, `recoverFailedMessageLocally` implement optional on-chain recovery to the payload `localRefundAddress` (callable only by that address; no native CCIP fee).
 - `message.sender` must be exactly 32 bytes (the CCIP wire encoding) for transactional cross-chain refunds; otherwise `InvalidSenderAddressFormat` (view `checkRefundEligibility` avoids revert). Local recovery does not depend on `message.sender` encoding.
@@ -310,7 +321,9 @@ Internal only (not callable externally): `sendToken`, `_buildOutboundMessage`, `
 ## Errors (custom)
 
 Every custom error the adapter can revert with. Errors raised inside `processMessage` are caught by `ccipReceive`
-(the message is stored as failed and `MessageFailed` is emitted) rather than reverting the CCIP execution.
+(the message is stored as failed and `MessageFailed` is emitted) rather than reverting the CCIP execution. A
+128-byte payload that fails `abi.decode` is the exception: it reverts without a custom error and makes `ccipReceive`
+revert (see [Malformed payloads](#malformed-payloads)).
 
 | Error | Raised when |
 |-------|-------------|

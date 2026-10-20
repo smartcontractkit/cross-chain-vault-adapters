@@ -22,7 +22,7 @@ Inbound payload (EVM and SVM): ABI-encode the tuple `(address target, bytes32 be
 
 `deliveryAndRefund` packing: bit 0 = `returnToSourceChain`; bits 1..160 = `localRefundAddress` on the destination EVM chain (`address(0)` disables local recovery). Encode as `(uint256(uint160(localRefundAddress)) << 1) | (returnToSourceChain ? 1 : 0)`.
 
-Validate the payload before sending: once tokens are bridged, a bad payload cannot be corrected. If the payload is not exactly 128 bytes, or `localRefundAddress` is zero, local recovery is unavailable and a failed message can only be refunded cross-chain.
+Validate the payload before sending: once tokens are bridged, a bad payload cannot be corrected. If the payload is not exactly 128 bytes, or `localRefundAddress` is zero, local recovery is unavailable and a failed message can only be refunded cross-chain. If the payload is 128 bytes but cannot be ABI-decoded (a `target` word that is not a valid address), `ccipReceive` reverts: the CCIP message fails, the adapter records nothing, and neither refund path applies.
 
 Return-leg CCIP `extraArgs` are not taken from the message. For EVM return destinations, operators choose `GenericExtraArgsV2` (CCIP v1) or `GenericExtraArgsV3` (CCIP v2) per destination selector using `setEvmReturnLaneFormat`, and on V3 lanes set `requestedFinality` per (destination selector, bridged token) using `setEvmReturnRequestedFinality`. For SVM, the adapter uses its fixed Solana `extraArgs` layout.
 
@@ -44,7 +44,7 @@ There is no user-supplied return-leg `extraArgs` in the payload. Return and refu
 
 On the destination chain, the configured CCIP router calls `ccipReceive()` on the adapter.
 
-In `ccipReceive`, the adapter verifies the caller is the configured router. If that fails, the call reverts immediately.
+In `ccipReceive`, the adapter verifies the caller is the configured router. If that fails, the call reverts immediately. The only other ways `ccipReceive` reverts are running out of gas and a 128-byte payload that cannot be ABI-decoded (see step 4).
 
 The inbound source chain selector is validated inside `processMessage` (`onlyValidChain`). If it is not configured, `processMessage` reverts with `InvalidChain` and `ccipReceive` catches that into the failed-message path (so the router delivery still completes and funds can be refunded).
 
@@ -69,7 +69,7 @@ Inside `processMessage()`, the adapter:
 - checks that the payload `target` is enabled (`InvalidTarget`)
 - checks that the inbound amount is nonzero (`AmountIsZero`)
 
-If any of these validations fail, processing reverts and the outer `ccipReceive()` catch path stores the failed message.
+If any of these validations fail, processing reverts and the outer `ccipReceive()` catch path stores the failed message. The exception is a 128-byte payload that cannot be ABI-decoded (a `target` word with non-zero upper 96 bits): the catch path decodes the payload again to read `localRefundAddress`, that decode reverts too, and `ccipReceive()` reverts. The CCIP message then fails at the router and the adapter stores nothing.
 
 ### 5. The adapter decides whether this is a deposit or redeem flow
 
@@ -168,7 +168,7 @@ It also emits `MessageFailed`.
 
 This means the message is now recoverable instead of silently lost.
 
-Because `ccipReceive()` catches the error and does not revert, the CCIP execution itself succeeds: the CCIP Explorer shows the message as `SUCCESS`. To tell whether the vault action actually happened, check the adapter: `MessageSucceeded` vs `MessageFailed` for the message ID, or `messageErrorCode(messageId)` (`BASIC` means failed and recoverable).
+Because `ccipReceive()` catches the error, the CCIP execution itself succeeds: the CCIP Explorer shows the message as `SUCCESS`. To tell whether the vault action actually happened, check the adapter: `MessageSucceeded` vs `MessageFailed` for the message ID, or `messageErrorCode(messageId)` (`BASIC` means failed and recoverable).
 
 ### 13. Anyone can inspect refund eligibility
 

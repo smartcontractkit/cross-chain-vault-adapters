@@ -69,7 +69,7 @@ contract CrossChainERC4626Adapter is IAny2EVMMessageReceiverV2, AccessControlEnu
 
     /// @notice Inbound `message.data` for every configured source chain family (EVM and SVM).
     /// @dev `abi.encode` length must be exactly `CCIP_MESSAGE_PAYLOAD_LENGTH` (128 bytes). `deliveryAndRefund` packs delivery/refund options as `(uint160(localRefundAddress) << 1) | (returnToSourceChain ? 1 : 0)`; bits 161..255 are ignored on decode.
-    /// @dev WARNING: if `localRefundAddress` (bits 1..160 of `deliveryAndRefund`) is left as `address(0)`, or if the payload is malformed so that it cannot be decoded into a valid 128-byte `Payload` at failure time, the stored `localRefundAddress` stays zero and `recoverFailedMessageLocally` is unavailable. Combined with a failed or unavailable cross-chain refund, this can leave inbound tokens PERMANENTLY STUCK in the adapter with no recovery path. Callers MUST validate the message—correct payload length, encoding, and a non-zero `localRefundAddress`—BEFORE initiating the cross-chain transaction; once funds are bridged a bad payload cannot be corrected.
+    /// @dev WARNING: if `localRefundAddress` (bits 1..160 of `deliveryAndRefund`) is left as `address(0)`, or if the payload is not exactly 128 bytes, the stored `localRefundAddress` stays zero and `recoverFailedMessageLocally` is unavailable. Combined with a failed or unavailable cross-chain refund, this can leave inbound tokens PERMANENTLY STUCK in the adapter with no recovery path. A 128-byte payload that cannot be ABI-decoded as `Payload` (a `target` word with non-zero upper 96 bits) makes `ccipReceive` itself revert: the CCIP message fails at the router, the adapter records no failed message, and neither adapter recovery path applies. Callers MUST validate the message—correct payload length, encoding, and a non-zero `localRefundAddress`—BEFORE initiating the cross-chain transaction; once funds are bridged a bad payload cannot be corrected.
     struct Payload {
         address target; // target contract to interact with
         bytes32 beneficiary; // recipient of proceeds from target contract interaction
@@ -524,7 +524,7 @@ contract CrossChainERC4626Adapter is IAny2EVMMessageReceiverV2, AccessControlEnu
     // This is the main extension surface for customer-specific behavior.
     //
     // The default pattern is:
-    // - accept a router-delivered message (only the router is validated here; source-chain allowlisting is in `processMessage`)
+    // - accept a router-delivered message (only the caller is validated here; source-chain allowlisting is in `processMessage`)
     // - isolate processing in a self-call
     // - persist failed messages for cross-chain refund or local recovery
     //
@@ -532,7 +532,7 @@ contract CrossChainERC4626Adapter is IAny2EVMMessageReceiverV2, AccessControlEnu
     // router call, while `processMessage` is the function that evolves (including `onlyValidChain` on the inbound source).
     ////////////////////////////////////////////////////////////////////////////
 
-    /// @notice CCIP router entrypoint. Reverts only if the caller is not the router. Processing failures (including invalid source chain in `processMessage`) are caught so delivered tokens are not stranded solely because `processMessage` reverted.
+    /// @notice CCIP router entrypoint. Reverts if the caller is not the router (`InvalidRouter`), or if `message.data` is exactly 128 bytes but cannot be ABI-decoded as `Payload` (a `target` word with non-zero upper 96 bits): `processMessage` reverts on the decode, and the same decode in the catch (`_storeFailedMessageRecord`) reverts too, so the CCIP message fails at the router and no failed message is recorded. Other processing failures (including invalid source chain, or a payload that is not 128 bytes, in `processMessage`) are caught so delivered tokens are not stranded solely because `processMessage` reverted. Like any receiver, it also reverts if the execution runs out of gas.
     function ccipReceive(Client.Any2EVMMessage calldata message) external onlyRouter {
         try this.processMessage(message) {
             emit MessageSucceeded(message.messageId);
@@ -555,6 +555,7 @@ contract CrossChainERC4626Adapter is IAny2EVMMessageReceiverV2, AccessControlEnu
     /// Reverts here are intentionally caught by `ccipReceive`, after which the
     /// message is marked as failed and can later be recovered via cross-chain refund
     /// or, when encoded in the payload, local transfer to `localRefundAddress`.
+    /// Exception: a 128-byte `message.data` that fails `abi.decode` also fails the decode in the catch, so `ccipReceive` reverts (see `ccipReceive`).
     /// Decoded `minimumOut` enforces a floor on output units after `_processTarget` and the adapter fee skim (shares on deposit, underlying on redeem); when `returnToSourceChain` is true, bridging uses that post-check amount. It does not capture fee-on-transfer dynamics, rebasing, or other exotic ERC-20 behavior—see field docs on `Payload`.
     /// @param message Inbound CCIP message being processed.
     function processMessage(Client.Any2EVMMessage calldata message)

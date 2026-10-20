@@ -590,6 +590,53 @@ contract CrossChainERC4626AdapterTest is Test {
     );
   }
 
+  /// @dev A payload of the wrong length is caught like any other processing failure, but no local refund address
+  /// can be read from it, so only the cross-chain refund remains.
+  function test_ccipReceive_records_failure_without_local_refund_when_payload_length_is_wrong() public {
+    bytes32 messageId = keccak256("wrong-length-payload");
+    bytes memory payload = abi.encode(
+      address(s_vault), _toBytes32(BENEFICIARY), uint256(1), _packDeliveryAndRefund(false, BENEFICIARY), uint256(0)
+    );
+    assertEq(payload.length, 160);
+    Client.Any2EVMMessage memory message =
+      _buildMessage(messageId, SOURCE_CHAIN_SELECTOR, _ccipEvmSender(ORIGINAL_SENDER), payload, address(s_asset), 1);
+    s_asset.mint(address(s_router), 1);
+
+    vm.expectEmit(address(s_adapter));
+    emit CrossChainERC4626Adapter.MessageFailed(messageId);
+    s_router.routeMessage(address(s_adapter), message);
+
+    assertEq(
+      uint256(uint8(s_adapter.messageErrorCode(messageId))), uint256(uint8(CrossChainERC4626Adapter.ErrorCode.BASIC))
+    );
+    assertEq(s_adapter.getFailedMessageRecord(messageId).localRefundAddress, address(0));
+  }
+
+  /// @dev A 128-byte payload whose `target` word is not a valid address (non-zero upper 96 bits) cannot be
+  /// ABI-decoded. `processMessage` reverts and so does the failure bookkeeping in the `ccipReceive` catch, so
+  /// `ccipReceive` itself reverts and the CCIP message fails at the router.
+  function test_ccipReceive_reverts_when_payload_target_is_not_an_address() public {
+    bytes memory payload = abi.encode(
+      uint256(uint160(address(s_vault))) | (uint256(1) << 160),
+      _toBytes32(BENEFICIARY),
+      uint256(1),
+      _packDeliveryAndRefund(false, BENEFICIARY)
+    );
+    assertEq(payload.length, 128);
+    Client.Any2EVMMessage memory message = _buildMessage(
+      keccak256("dirty-target-payload"),
+      SOURCE_CHAIN_SELECTOR,
+      _ccipEvmSender(ORIGINAL_SENDER),
+      payload,
+      address(s_asset),
+      1
+    );
+
+    vm.prank(address(s_router));
+    vm.expectRevert(bytes(""));
+    s_adapter.ccipReceive(message);
+  }
+
   function test_deposit_local_delivery_succeeds() public {
     bytes32 messageId = keccak256("deposit-local");
     Client.Any2EVMMessage memory message = _buildMessage(

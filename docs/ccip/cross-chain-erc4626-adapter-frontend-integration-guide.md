@@ -548,12 +548,13 @@ bytes (`InvalidPayloadLength` otherwise).
 
 > **CRITICAL — validate the payload before sending, funds can be permanently lost.**
 > The payload is bridged with the user's tokens and cannot be corrected once the
-> transaction is initiated. If the payload is malformed (wrong length/encoding) so the
-> adapter cannot decode it at failure time, or if `localRefundAddress` is left as
-> `address(0)`, the stored refund address stays zero and local recovery
-> (`recoverFailedMessageLocally`) is unavailable. If a cross-chain refund is also
-> unavailable or fails, the inbound tokens can become PERMANENTLY STUCK in the adapter
-> with no recovery path. The UI MUST validate the full message—exact 128-byte length,
+> transaction is initiated. If the payload is not exactly 128 bytes, or if
+> `localRefundAddress` is left as `address(0)`, the stored refund address stays zero and
+> local recovery (`recoverFailedMessageLocally`) is unavailable. If a cross-chain refund is
+> also unavailable or fails, the inbound tokens can become PERMANENTLY STUCK in the adapter
+> with no recovery path. If the payload is 128 bytes but cannot be ABI-decoded (a `target`
+> word that is not a valid address), `ccipReceive` itself reverts: the CCIP message fails,
+> the adapter records nothing, and neither adapter recovery path applies. The UI MUST validate the full message—exact 128-byte length,
 > correct ABI encoding, an enabled `target`, a canonical `beneficiary`, and a non-zero
 > `localRefundAddress`—before building and submitting the `ccipSend`.
 
@@ -623,8 +624,8 @@ Rules the UI must enforce when building the payload:
   `recoverFailedMessageLocally` if the message fails. `address(0)` disables local recovery.
   Although technically optional, strongly prefer setting a valid non-zero
   `localRefundAddress`: it is the user's last line of defense if a cross-chain refund is
-  unavailable. Omitting it (or shipping a malformed payload that cannot be decoded at
-  failure time) means failed-message tokens may be permanently unrecoverable.
+  unavailable. Omitting it (or shipping a payload that is not exactly 128 bytes) means
+  failed-message tokens may be permanently unrecoverable.
 
 ---
 
@@ -818,8 +819,10 @@ const status = request.metadata?.status; // e.g. MessageStatus.SUCCESS / FAILED 
 > `MessageFailed(messageId)` and sets `messageErrorCode(messageId) = BASIC`. After CCIP
 > reports SUCCESS, read `messageErrorCode(messageId)` on the hub (or look for
 > `MessageSucceeded` / `MessageFailed`) before showing the operation as done. A CCIP
-> FAILED status means `ccipReceive` itself reverted (for example, not enough destination
-> gas); that case is handled by CCIP manual execution, not by the adapter's refund paths.
+> FAILED status means `ccipReceive` itself reverted: not enough destination gas, or a
+> 128-byte payload that cannot be ABI-decoded. Neither case is handled by the adapter's
+> refund paths. Manual execution with more gas fixes the first; the second reverts again on
+> every attempt, so validate the payload before sending.
 
 Render a stepper (Source confirmed → In flight → Executed on hub → Returned/Delivered) and
 link to the CCIP explorer: `https://ccip.chain.link/msg/${messageId}` plus the source tx on
